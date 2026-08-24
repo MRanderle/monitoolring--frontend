@@ -49,6 +49,33 @@ Frontend do projeto Monitoolring: Next.js 14, React, Tailwind CSS e shadcn/ui.
 
    App disponível em `http://localhost:3000`.
 
+## Rodando com Docker
+
+Pré-requisito: Docker instalado (com Docker Compose).
+
+Este projeto e o [backend](https://github.com/MRanderle/monitoolring--backend) compartilham a rede externa `monitoolring-network` para poderem se comunicar entre containers. Crie-a uma vez (se ainda não existir):
+
+```bash
+docker network create monitoolring-network
+```
+
+Depois, suba o frontend:
+
+```bash
+docker compose up --build
+```
+
+App disponível em `http://localhost:3000`.
+
+Para rodar apenas com Docker (sem compose):
+
+```bash
+docker build -t monitoolring-frontend .
+docker run -p 3000:3000 monitoolring-frontend
+```
+
+> Para chamar o backend (em outro repositório) quando ambos rodam em containers, suba os dois via `docker compose up` — eles compartilham a rede externa `monitoolring-network`.
+
 ## Scripts disponíveis
 
 | Comando         | Descrição                          |
