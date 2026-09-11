@@ -3,6 +3,8 @@ import { Pencil, Plus, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 
+import { ROTA_CADASTRO_FERRAMENTA } from "../rotas";
+
 interface BarraAcoesFerramentasProps {
   onEditar: () => void;
   onExcluir: () => void;
@@ -13,7 +15,7 @@ export function BarraAcoesFerramentas({ onEditar, onExcluir }: BarraAcoesFerrame
   return (
     <div className="flex flex-wrap gap-2">
       <Button asChild variant="sucesso">
-        <Link href="/ferramentas/nova">
+        <Link href={ROTA_CADASTRO_FERRAMENTA}>
           <Plus aria-hidden="true" className="mr-2 h-4 w-4" />
           Inserir
         </Link>

@@ -1,0 +1,81 @@
+import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import type { UseFormSetError } from "react-hook-form";
+import { toast } from "sonner";
+
+import type { ActionError, ActionResult } from "@/lib/action-result";
+
+import { ROTA_CONSULTA_FERRAMENTAS } from "../rotas";
+import type { DadosFerramenta, ValoresFormularioFerramenta } from "../types";
+
+export type AcaoSalvarFerramenta = (dados: DadosFerramenta) => Promise<ActionResult>;
+
+interface OpcoesSalvarFerramenta {
+  acaoSalvar: AcaoSalvarFerramenta;
+  mensagemSucesso: string;
+  setError: UseFormSetError<ValoresFormularioFerramenta>;
+}
+
+const CAMPOS_FORMULARIO = ["nome", "codigo", "quantidade"] as const;
+
+export function useSalvarFerramenta({
+  acaoSalvar,
+  mensagemSucesso,
+  setError,
+}: OpcoesSalvarFerramenta) {
+  const router = useRouter();
+  const [erro, setErro] = useState<ActionError | null>(null);
+  const [isRedirecionando, startTransition] = useTransition();
+
+  async function salvar(dados: DadosFerramenta) {
+    setErro(null);
+    const resultado = await executarAcao(acaoSalvar, dados);
+    if (!resultado.ok) {
+      // SCRUM-83 AC 8: mensagem da API em toast; o bloco de erro fica ancorado no formulário
+      // porque o toast some antes de o operador terminar de ler.
+      toast.error(resultado.error.message);
+      marcarErrosDeCampo(resultado.error.details, setError);
+      setErro(resultado.error);
+      return;
+    }
+
+    // SCRUM-83 AC 7: sucesso volta para a consulta de ferramentas.
+    toast.success(mensagemSucesso);
+    startTransition(() => router.push(ROTA_CONSULTA_FERRAMENTAS));
+  }
+
+  return { salvar, erro, isRedirecionando };
+}
+
+async function executarAcao(
+  acao: AcaoSalvarFerramenta,
+  dados: DadosFerramenta,
+): Promise<ActionResult> {
+  try {
+    return await acao(dados);
+  } catch (erro) {
+    // Falha não prevista na Server Action (ex.: resposta fora do contrato) chega sem mensagem útil.
+    console.error("[ferramentas] falha inesperada ao salvar", erro);
+    return {
+      ok: false,
+      error: { status: 500, message: "O servidor não conseguiu concluir a gravação.", details: [] },
+    };
+  }
+}
+
+// O backend devolve detalhes de validação como "campo: mensagem"; os que correspondem a um campo
+// do formulário aparecem junto dele.
+function marcarErrosDeCampo(
+  detalhes: string[],
+  setError: UseFormSetError<ValoresFormularioFerramenta>,
+) {
+  for (const detalhe of detalhes) {
+    const [campo, ...partesMensagem] = detalhe.split(":");
+    const campoFormulario = CAMPOS_FORMULARIO.find((nome) => nome === campo.trim());
+    const mensagem = partesMensagem.join(":").trim();
+    if (campoFormulario && mensagem) {
+      const mensagemFormatada = mensagem.charAt(0).toUpperCase() + mensagem.slice(1);
+      setError(campoFormulario, { type: "server", message: mensagemFormatada });
+    }
+  }
+}

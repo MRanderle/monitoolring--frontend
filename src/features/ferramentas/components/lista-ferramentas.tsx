@@ -1,6 +1,7 @@
 import { BotaoTentarNovamente } from "@/components/shared/botao-tentar-novamente";
 import { MensagemErro } from "@/components/shared/mensagem-erro";
-import { ApiError, NETWORK_ERROR_STATUS } from "@/lib/api-client";
+import { NETWORK_ERROR_STATUS } from "@/lib/action-result";
+import { ApiError } from "@/lib/api-client";
 
 import { listarFerramentas } from "../services/ferramentas-api";
 import type { Ferramenta } from "../types";

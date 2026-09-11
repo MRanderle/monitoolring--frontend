@@ -3,10 +3,9 @@ import "server-only";
 import { unstable_noStore as noStore } from "next/cache";
 import { z } from "zod";
 
-const TIMEOUT_MS = 10_000;
+import { NETWORK_ERROR_STATUS } from "./action-result";
 
-// Status usado quando não houve resposta HTTP (rede indisponível ou timeout).
-export const NETWORK_ERROR_STATUS = 0;
+const TIMEOUT_MS = 10_000;
 
 export class ApiError extends Error {
   readonly status: number;
