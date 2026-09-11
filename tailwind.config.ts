@@ -33,6 +33,10 @@ const config: Config = {
           DEFAULT: "hsl(var(--destructive))",
           foreground: "hsl(var(--destructive-foreground))",
         },
+        sucesso: {
+          DEFAULT: "hsl(var(--sucesso))",
+          foreground: "hsl(var(--sucesso-foreground))",
+        },
         muted: {
           DEFAULT: "hsl(var(--muted))",
           foreground: "hsl(var(--muted-foreground))",
