@@ -21,6 +21,22 @@ export function descreverErroConsulta(status: number): DescricaoErro {
   return { motivo: "O servidor encontrou um problema ao consultar as ferramentas.", orientacao: ORIENTACAO_PADRAO };
 }
 
+export function descreverErroExclusao(status: number): DescricaoErro {
+  if (status === 404) {
+    return {
+      motivo: "Esta ferramenta já não existe no sistema.",
+      orientacao: "A lista foi atualizada; confira se o registro certo está selecionado.",
+    };
+  }
+  if (status === NETWORK_ERROR_STATUS) {
+    return { motivo: MOTIVO_SEM_RESPOSTA, orientacao: "Verifique a conexão e tente excluir novamente." };
+  }
+  if (status === 401 || status === 403) {
+    return { motivo: MOTIVO_SESSAO_INVALIDA, orientacao: "Recarregue a página e tente novamente." };
+  }
+  return { motivo: "O servidor encontrou um problema ao excluir a ferramenta.", orientacao: ORIENTACAO_PADRAO };
+}
+
 // Em erro de dados (400) a mensagem da API diz o que corrigir e vai para a tela. Nos demais casos
 // ela fica só no toast, e o bloco de erro explica a situação em linguagem do operador.
 export function descreverErroGravacao(status: number, mensagemDaApi: string): DescricaoErro {

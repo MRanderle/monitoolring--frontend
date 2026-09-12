@@ -4,6 +4,7 @@ import type { UseFormSetError } from "react-hook-form";
 import { toast } from "sonner";
 
 import type { ActionError, ActionResult } from "@/lib/action-result";
+import { runClientAction } from "@/lib/client-action";
 
 import { ROTA_CONSULTA_FERRAMENTAS } from "../rotas";
 import type { DadosFerramenta, ValoresFormularioFerramenta } from "../types";
@@ -29,7 +30,7 @@ export function useSalvarFerramenta({
 
   async function salvar(dados: DadosFerramenta) {
     setErro(null);
-    const resultado = await executarAcao(acaoSalvar, dados);
+    const resultado = await runClientAction(() => acaoSalvar(dados));
     if (!resultado.ok) {
       // SCRUM-83 AC 8: mensagem da API em toast; o bloco de erro fica ancorado no formulário
       // porque o toast some antes de o operador terminar de ler.
@@ -54,22 +55,6 @@ export function useSalvarFerramenta({
   }
 
   return { salvar, erro, isRedirecionando, limparErro };
-}
-
-async function executarAcao(
-  acao: AcaoSalvarFerramenta,
-  dados: DadosFerramenta,
-): Promise<ActionResult> {
-  try {
-    return await acao(dados);
-  } catch (erro) {
-    // Falha não prevista na Server Action (ex.: resposta fora do contrato) chega sem mensagem útil.
-    console.error("[ferramentas] falha inesperada ao salvar", erro);
-    return {
-      ok: false,
-      error: { status: 500, message: "O servidor não conseguiu concluir a gravação.", details: [] },
-    };
-  }
 }
 
 // O backend devolve detalhes de validação como "campo: mensagem"; os que correspondem a um campo

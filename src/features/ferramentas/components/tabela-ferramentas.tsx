@@ -19,6 +19,7 @@ import { cn } from "@/lib/utils";
 import { rotaEdicaoFerramenta } from "../rotas";
 import type { Ferramenta } from "../types";
 import { BarraAcoesFerramentas } from "./barra-acoes-ferramentas";
+import { DialogoExclusaoFerramenta } from "./dialogo-exclusao-ferramenta";
 
 const TOTAL_COLUNAS = 4;
 
@@ -29,6 +30,10 @@ interface TabelaFerramentasProps {
 export function TabelaFerramentas({ ferramentas }: TabelaFerramentasProps) {
   const router = useRouter();
   const [idSelecionado, setIdSelecionado] = useState<string | null>(null);
+  // Guarda a ferramenta escolhida ao abrir a confirmação. Se derivasse da seleção, uma atualização
+  // da lista (ex.: registro que já não existe) desmontaria o diálogo e levaria junto a mensagem
+  // de erro que o operador precisa ler.
+  const [ferramentaParaExcluir, setFerramentaParaExcluir] = useState<Ferramenta | null>(null);
 
   // Derivado da lista atual: se a ferramenta sumir após um refresh, a seleção some junto.
   const ferramentaSelecionada =
@@ -42,12 +47,13 @@ export function TabelaFerramentas({ ferramentas }: TabelaFerramentasProps) {
     router.push(rotaEdicaoFerramenta(ferramentaSelecionada.id));
   }
 
+  // SCRUM-103: sem seleção, o aviso explica o que falta; com seleção, a confirmação vem antes.
   function handleClickExcluir() {
     if (!ferramentaSelecionada) {
       toast.warning("Selecione uma ferramenta na lista para excluir.");
       return;
     }
-    // TODO: confirmar e excluir a ferramenta selecionada — SCRUM-103
+    setFerramentaParaExcluir(ferramentaSelecionada);
   }
 
   return (
@@ -84,6 +90,19 @@ export function TabelaFerramentas({ ferramentas }: TabelaFerramentasProps) {
           </TableBody>
         </Table>
       </div>
+
+      {ferramentaParaExcluir && (
+        <DialogoExclusaoFerramenta
+          ferramenta={ferramentaParaExcluir}
+          aberto
+          onAlterarAberto={(aberto) => {
+            if (!aberto) {
+              setFerramentaParaExcluir(null);
+            }
+          }}
+          onExcluida={() => setIdSelecionado(null)}
+        />
+      )}
     </div>
   );
 }

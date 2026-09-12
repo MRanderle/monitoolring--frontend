@@ -7,7 +7,7 @@ import { runApiAction } from "@/lib/api-action";
 
 import { ROTA_CONSULTA_FERRAMENTAS, rotaEdicaoFerramenta } from "../rotas";
 import type { DadosFerramenta } from "../types";
-import { cadastrarFerramenta, editarFerramenta } from "./ferramentas-api";
+import { cadastrarFerramenta, editarFerramenta, excluirFerramenta } from "./ferramentas-api";
 
 export async function acaoCadastrarFerramenta(dados: DadosFerramenta): Promise<ActionResult> {
   const resultado = await runApiAction(() => cadastrarFerramenta(dados));
@@ -28,6 +28,14 @@ export async function acaoEditarFerramenta(
   if (resultado.ok) {
     revalidatePath(ROTA_CONSULTA_FERRAMENTAS);
     revalidatePath(rotaEdicaoFerramenta(id));
+  }
+  return resultado;
+}
+
+export async function acaoExcluirFerramenta(id: string): Promise<ActionResult> {
+  const resultado = await runApiAction(() => excluirFerramenta(id));
+  if (resultado.ok) {
+    revalidatePath(ROTA_CONSULTA_FERRAMENTAS);
   }
   return resultado;
 }

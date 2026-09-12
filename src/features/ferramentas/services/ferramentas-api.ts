@@ -38,3 +38,8 @@ export async function editarFerramenta(
   const resposta = await apiRequest(recursoFerramenta(id), { method: "PUT", body: dados });
   return ferramentaSchema.parse(resposta);
 }
+
+// SCRUM-103: sucesso é 204 No Content, então não há corpo para validar.
+export async function excluirFerramenta(id: string): Promise<void> {
+  await apiRequest(recursoFerramenta(id), { method: "DELETE" });
+}
