@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
+import { useRouter } from "next/navigation";
 import { PackageOpen } from "lucide-react";
 import { toast } from "sonner";
 
@@ -15,6 +16,7 @@ import {
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 
+import { rotaEdicaoFerramenta } from "../rotas";
 import type { Ferramenta } from "../types";
 import { BarraAcoesFerramentas } from "./barra-acoes-ferramentas";
 
@@ -25,6 +27,7 @@ interface TabelaFerramentasProps {
 }
 
 export function TabelaFerramentas({ ferramentas }: TabelaFerramentasProps) {
+  const router = useRouter();
   const [idSelecionado, setIdSelecionado] = useState<string | null>(null);
 
   // Derivado da lista atual: se a ferramenta sumir após um refresh, a seleção some junto.
@@ -36,7 +39,7 @@ export function TabelaFerramentas({ ferramentas }: TabelaFerramentasProps) {
       toast.warning("Selecione uma ferramenta na lista para editar.");
       return;
     }
-    // TODO: abrir a edição da ferramenta selecionada — SCRUM-95
+    router.push(rotaEdicaoFerramenta(ferramentaSelecionada.id));
   }
 
   function handleClickExcluir() {

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 
+import { BotaoTentarNovamente } from "@/components/shared/botao-tentar-novamente";
 import { MensagemErro } from "@/components/shared/mensagem-erro";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,9 +17,10 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { NETWORK_ERROR_STATUS, type ActionError } from "@/lib/action-result";
+import type { ActionError } from "@/lib/action-result";
 
 import { useSalvarFerramenta, type AcaoSalvarFerramenta } from "../hooks/use-salvar-ferramenta";
+import { descreverErroGravacao } from "../mensagens-erro";
 import { ROTA_CONSULTA_FERRAMENTAS } from "../rotas";
 import {
   formularioFerramentaSchema,
@@ -31,19 +33,26 @@ import {
 
 const VALORES_VAZIOS: ValoresFormularioFerramenta = { nome: "", codigo: "", quantidade: "" };
 
+const STATUS_VERSAO_DESATUALIZADA = 409;
+
 interface FormularioFerramentaProps {
   acaoSalvar: AcaoSalvarFerramenta;
   mensagemSucesso: string;
+  valoresIniciais?: ValoresFormularioFerramenta;
 }
 
-export function FormularioFerramenta({ acaoSalvar, mensagemSucesso }: FormularioFerramentaProps) {
+export function FormularioFerramenta({
+  acaoSalvar,
+  mensagemSucesso,
+  valoresIniciais,
+}: FormularioFerramentaProps) {
   const form = useForm<ValoresFormularioFerramenta, unknown, DadosFerramenta>({
     resolver: zodResolver(formularioFerramentaSchema),
-    defaultValues: VALORES_VAZIOS,
+    defaultValues: valoresIniciais ?? VALORES_VAZIOS,
     // Valida ao sair do campo, não a cada tecla (04-ui-design-system §9).
     mode: "onBlur",
   });
-  const { salvar, erro, isRedirecionando } = useSalvarFerramenta({
+  const { salvar, erro, isRedirecionando, limparErro } = useSalvarFerramenta({
     acaoSalvar,
     mensagemSucesso,
     setError: form.setError,
@@ -62,7 +71,13 @@ export function FormularioFerramenta({ acaoSalvar, mensagemSucesso }: Formulario
             <FormItem>
               <FormLabel>Nome</FormLabel>
               <FormControl>
-                <Input {...field} autoFocus autoComplete="off" aria-required="true" maxLength={MAX_CARACTERES_NOME} />
+                <Input
+                  {...field}
+                  autoFocus
+                  autoComplete="off"
+                  aria-required="true"
+                  maxLength={MAX_CARACTERES_NOME}
+                />
               </FormControl>
               <FormDescription>Até {MAX_CARACTERES_NOME} caracteres.</FormDescription>
               <FormMessage />
@@ -77,7 +92,12 @@ export function FormularioFerramenta({ acaoSalvar, mensagemSucesso }: Formulario
             <FormItem>
               <FormLabel>Código</FormLabel>
               <FormControl>
-                <Input {...field} autoComplete="off" aria-required="true" maxLength={MAX_CARACTERES_CODIGO} />
+                <Input
+                  {...field}
+                  autoComplete="off"
+                  aria-required="true"
+                  maxLength={MAX_CARACTERES_CODIGO}
+                />
               </FormControl>
               <FormDescription>
                 Código de estoque com letras e números, até {MAX_CARACTERES_CODIGO} caracteres.
@@ -112,7 +132,7 @@ export function FormularioFerramenta({ acaoSalvar, mensagemSucesso }: Formulario
           )}
         />
 
-        {erro && <ErroGravacao erro={erro} />}
+        {erro && <ErroGravacao erro={erro} onRecarregar={limparErro} />}
 
         <div className="flex flex-wrap gap-2">
           <Button type="submit" disabled={isSalvando}>
@@ -128,33 +148,26 @@ export function FormularioFerramenta({ acaoSalvar, mensagemSucesso }: Formulario
   );
 }
 
-function ErroGravacao({ erro }: { erro: ActionError }) {
-  const { motivo, orientacao } = descreverErroGravacao(erro);
-  return (
-    <MensagemErro titulo="Não foi possível salvar a ferramenta." motivo={motivo} orientacao={orientacao} />
-  );
+interface ErroGravacaoProps {
+  erro: ActionError;
+  onRecarregar: () => void;
 }
 
-// Erros de dados (400) exibem a mensagem da API, que diz o que corrigir. Nos demais, a mensagem
-// técnica do servidor fica só no toast e o bloco explica a situação em linguagem do operador.
-function descreverErroGravacao(erro: ActionError): { motivo: string; orientacao: string } {
-  if (erro.status === 400) {
-    return { motivo: erro.message, orientacao: "Corrija os dados e salve novamente." };
-  }
-  if (erro.status === NETWORK_ERROR_STATUS) {
-    return {
-      motivo: "O servidor não respondeu. A conexão pode estar indisponível.",
-      orientacao: "Verifique a conexão e tente salvar novamente.",
-    };
-  }
-  if (erro.status === 401 || erro.status === 403) {
-    return {
-      motivo: "O servidor recusou o acesso porque a sessão é inválida ou expirou.",
-      orientacao: "Recarregue a página e tente novamente. Os dados preenchidos continuam no formulário.",
-    };
-  }
-  return {
-    motivo: "O servidor encontrou um problema ao gravar a ferramenta.",
-    orientacao: "Tente salvar novamente. Se o problema continuar, avise o responsável pelo sistema.",
-  };
+function ErroGravacao({ erro, onRecarregar }: ErroGravacaoProps) {
+  const { motivo, orientacao } = descreverErroGravacao(erro.status, erro.message);
+  // Na disputa de versão, recarregar traz a versão atual do servidor para o formulário sem
+  // descartar o que o operador digitou.
+  const acao =
+    erro.status === STATUS_VERSAO_DESATUALIZADA ? (
+      <BotaoTentarNovamente rotulo="Recarregar dados" onTentarNovamente={onRecarregar} />
+    ) : undefined;
+
+  return (
+    <MensagemErro
+      titulo="Não foi possível salvar a ferramenta."
+      motivo={motivo}
+      orientacao={orientacao}
+      acao={acao}
+    />
+  );
 }

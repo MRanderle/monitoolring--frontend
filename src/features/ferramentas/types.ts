@@ -43,3 +43,6 @@ export const formularioFerramentaSchema = z.object({
 export type ValoresFormularioFerramenta = z.input<typeof formularioFerramentaSchema>;
 
 export type DadosFerramenta = z.output<typeof formularioFerramentaSchema>;
+
+// A edição envia também a versão lida na consulta: é o optimistic lock do backend (SCRUM-93).
+export type DadosEdicaoFerramenta = DadosFerramenta & { versao: number };

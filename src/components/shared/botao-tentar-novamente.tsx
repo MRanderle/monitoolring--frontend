@@ -8,14 +8,20 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 interface BotaoTentarNovamenteProps {
+  rotulo?: string;
   onTentarNovamente?: () => void;
 }
 
-// router.refresh() refaz a busca dos Server Components; o callback opcional permite ao
-// error boundary limpar o próprio estado de erro na mesma transição.
-export function BotaoTentarNovamente({ onTentarNovamente }: BotaoTentarNovamenteProps) {
+const ROTULO_PADRAO = "Tentar novamente";
+
+// router.refresh() refaz a busca dos Server Components; o callback opcional permite a quem usa
+// limpar o próprio estado de erro na mesma transição.
+export function BotaoTentarNovamente({
+  rotulo = ROTULO_PADRAO,
+  onTentarNovamente,
+}: BotaoTentarNovamenteProps) {
   const router = useRouter();
-  const [isTentando, startTransition] = useTransition();
+  const [isCarregando, startTransition] = useTransition();
 
   function handleClick() {
     startTransition(() => {
@@ -25,12 +31,12 @@ export function BotaoTentarNovamente({ onTentarNovamente }: BotaoTentarNovamente
   }
 
   return (
-    <Button type="button" variant="outline" onClick={handleClick} disabled={isTentando}>
+    <Button type="button" variant="outline" onClick={handleClick} disabled={isCarregando}>
       <RotateCw
         aria-hidden="true"
-        className={cn("mr-2 h-4 w-4", isTentando && "motion-safe:animate-spin")}
+        className={cn("mr-2 h-4 w-4", isCarregando && "motion-safe:animate-spin")}
       />
-      {isTentando ? "Tentando novamente…" : "Tentar novamente"}
+      {isCarregando ? "Carregando…" : rotulo}
     </Button>
   );
 }

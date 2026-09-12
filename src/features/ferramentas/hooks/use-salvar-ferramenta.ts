@@ -41,10 +41,19 @@ export function useSalvarFerramenta({
 
     // SCRUM-83 AC 7: sucesso volta para a consulta de ferramentas.
     toast.success(mensagemSucesso);
-    startTransition(() => router.push(ROTA_CONSULTA_FERRAMENTAS));
+    startTransition(() => {
+      // Sem o refresh, o cache de rotas do cliente devolve a tela de edição já visitada e o
+      // formulário reabre preso a uma versão antiga, provocando conflito falso na próxima gravação.
+      router.refresh();
+      router.push(ROTA_CONSULTA_FERRAMENTAS);
+    });
   }
 
-  return { salvar, erro, isRedirecionando };
+  function limparErro() {
+    setErro(null);
+  }
+
+  return { salvar, erro, isRedirecionando, limparErro };
 }
 
 async function executarAcao(
